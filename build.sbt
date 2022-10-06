@@ -26,7 +26,7 @@ val MunitCe3 = "1.0.7"
 ThisBuild / crossScalaVersions := Seq("2.12.15", "3.2.0", Scala213)
 ThisBuild / scalaVersion := crossScalaVersions.value.last
 
-lazy val root = tlCrossRootProject.aggregate(core, testkit, prometheus)
+lazy val root = tlCrossRootProject.aggregate(core, testkit, prometheus, otel)
 
 lazy val core = project
   .in(file("core"))
@@ -86,5 +86,15 @@ lazy val prometheus =
         .toList
     )
     .dependsOn(core, testkit % "test->compile")
+
+lazy val otel = project
+  .in(file("otel"))
+  .settings(
+    name := "openmetrics4s-otel",
+    libraryDependencies ++= Seq(
+      "io.opentelemetry" % "opentelemetry-sdk-metrics" % "1.18.0"
+    )
+  )
+  .dependsOn(core, testkit % "test->compile")
 
 lazy val docs = project.in(file("site"))
