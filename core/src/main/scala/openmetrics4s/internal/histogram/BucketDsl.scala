@@ -17,6 +17,7 @@
 package openmetrics4s.internal.histogram
 
 import cats.data.NonEmptySeq
+import openmetrics4s.internal.CustomDslStep
 import openmetrics4s.{Histogram, Metric, MetricsRegistry}
 
 final class BucketDsl[F[_]] private[openmetrics4s] (
@@ -25,7 +26,7 @@ final class BucketDsl[F[_]] private[openmetrics4s] (
     metric: Histogram.Name,
     help: Metric.Help,
     commonLabels: Metric.CommonLabels
-) {
+) extends CustomDslStep[NonEmptySeq[Double], HistogramDsl[F]] {
 
   /** Initialise this histogram with the default HTTP buckets list.
     *
@@ -39,11 +40,14 @@ final class BucketDsl[F[_]] private[openmetrics4s] (
   /** Provides the list of buckets for the histogram as a non-empty sequence.
     */
   def buckets(list: NonEmptySeq[Double]): HistogramDsl[F] =
-    new HistogramDsl(registry, prefix, metric, help, commonLabels, list)
+    apply(list)
 
   /** Provides the list of buckets for the histogram as parameters.
     */
   def buckets(head: Double, rest: Double*): HistogramDsl[F] = buckets(
     NonEmptySeq.of(head, rest: _*)
   )
+
+  override protected def apply(a: NonEmptySeq[Double]): HistogramDsl[F] =
+    new HistogramDsl(registry, prefix, metric, help, commonLabels, a)
 }

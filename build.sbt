@@ -26,7 +26,7 @@ val MunitCe3 = "1.0.7"
 ThisBuild / crossScalaVersions := Seq("2.12.15", "3.2.0", Scala213)
 ThisBuild / scalaVersion := crossScalaVersions.value.last
 
-lazy val root = tlCrossRootProject.aggregate(core, testkit, prometheus)
+lazy val root = tlCrossRootProject.aggregate(core, testkit, prometheus, micrometer)
 
 lazy val core = project
   .in(file("core"))
@@ -86,5 +86,19 @@ lazy val prometheus =
         .toList
     )
     .dependsOn(core, testkit % "test->compile")
+
+lazy val micrometer = project
+  .in(file("micrometer"))
+  .settings(
+    name := "openmetrics4s-prometheus",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %% "cats-effect-std" % CatsEffect,
+      "org.typelevel" %% "log4cats-core" % Log4Cats,
+      "io.micrometer" % "micrometer-core" % "1.9.4",
+      "io.micrometer" % "micrometer-registry-prometheus" % "1.9.4",
+      "org.typelevel" %% "log4cats-noop" % Log4Cats % Test
+    )
+  )
+  .dependsOn(core, testkit % "test->compile")
 
 lazy val docs = project.in(file("site"))

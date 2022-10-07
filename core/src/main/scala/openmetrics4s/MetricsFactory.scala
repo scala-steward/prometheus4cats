@@ -28,6 +28,7 @@ sealed abstract class MetricsFactory[F[_]](
     prefix: Option[Metric.Prefix],
     commonLabels: CommonLabels
 ) {
+
   def mapK[G[_]: Monad: RecordAttempt](fk: F ~> G): MetricsFactory[G] =
     new MetricsFactory[G](
       MetricsRegistry.mapK(registry, fk),
@@ -99,7 +100,11 @@ object MetricsFactory {
       MetricsRegistry.noop,
       None,
       CommonLabels.empty
-    ) {}
+    ) {
+      override type CustomStep = BucketDsl[F]
+
+      override def derp: CustomStep = new BucketDsl[F]()
+    }
 
   /** Builder for [[MetricsFactory]]
     */
