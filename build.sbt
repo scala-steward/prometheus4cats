@@ -17,10 +17,7 @@ ThisBuild / organization := "com.permutive"
 ThisBuild / organizationName := "Permutive"
 ThisBuild / startYear := Some(2022)
 ThisBuild / licenses := Seq(License.Apache2)
-ThisBuild / developers := List(
-  tlGitHubDev("janstenpickle", "Chris Jansen"),
-  tlGitHubDev("TimWSpence", "Tim Spence")
-)
+ThisBuild / developers := List(tlGitHubDev("janstenpickle", "Chris Jansen"), tlGitHubDev("TimWSpence", "Tim Spence"))
 
 // publish to s01.oss.sonatype.org (set to true to publish to oss.sonatype.org instead)
 ThisBuild / tlSonatypeUseLegacyHost := false
@@ -46,30 +43,27 @@ ThisBuild / tlSitePublishBranch := Some("main")
 
 ThisBuild / tlSonatypeUseLegacyHost := true
 
-lazy val root = tlCrossRootProject.aggregate(core, testkit, java, unidocs)
+lazy val root = tlCrossRootProject.aggregate(core, mapref, testkit, java, unidocs)
 
 lazy val core = project
   .in(file("core"))
   .settings(
     name := "prometheus4cats",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % "2.8.0",
+      "org.typelevel" %%% "cats-core"          % "2.8.0",
       "org.typelevel" %%% "cats-effect-kernel" % CatsEffect,
-      "org.typelevel" %%% "cats-effect" % CatsEffect % Test,
-      "org.typelevel" %% "cats-effect-testkit" % CatsEffect % Test,
-      "org.typelevel" %%% "cats-laws" % Cats,
-      "org.scalameta" %%% "munit" % Munit % Test,
-      "org.typelevel" %% "munit-cats-effect-3" % MunitCe3,
-      "org.typelevel" %%% "discipline-munit" % "1.0.9" % Test,
-      "org.scalameta" %% "munit-scalacheck" % Munit % Test,
-      "org.typelevel" %% "scalacheck-effect-munit" % ScalacheckEffect % Test
+      "org.typelevel" %%% "cats-effect"        % CatsEffect                % Test,
+      "org.typelevel"                         %% "cats-effect-testkit"     % CatsEffect       % Test,
+      "org.typelevel" %%% "cats-laws"          % Cats,
+      "org.scalameta" %%% "munit"              % Munit                     % Test,
+      "org.typelevel"                         %% "munit-cats-effect-3"     % MunitCe3,
+      "org.typelevel" %%% "discipline-munit"   % "1.0.9"                   % Test,
+      "org.scalameta"                         %% "munit-scalacheck"        % Munit            % Test,
+      "org.typelevel"                         %% "scalacheck-effect-munit" % ScalacheckEffect % Test
     ),
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) { case Some((2, _)) =>
-        Seq(
-          "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-          "com.chuusai" %% "shapeless" % "2.3.9"
-        )
+        Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value, "com.chuusai" %% "shapeless" % "2.3.9")
       }
       .toList
       .flatten,
@@ -84,11 +78,22 @@ lazy val testkit = project
   .settings(
     name := "prometheus4cats-testkit",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-effect-testkit" % CatsEffect,
-      "org.scalameta" %% "munit" % Munit,
-      "org.typelevel" %% "munit-cats-effect-3" % MunitCe3,
-      "org.scalameta" %% "munit-scalacheck" % Munit,
+      "org.typelevel" %% "cats-effect-testkit"     % CatsEffect,
+      "org.scalameta" %% "munit"                   % Munit,
+      "org.typelevel" %% "munit-cats-effect-3"     % MunitCe3,
+      "org.scalameta" %% "munit-scalacheck"        % Munit,
       "org.typelevel" %% "scalacheck-effect-munit" % ScalacheckEffect
+    )
+  )
+  .dependsOn(core)
+
+lazy val mapref = project
+  .in(file("mapref"))
+  .settings(
+    name := "prometheus4cats-mapref",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "alleycats-core" % "2.8.0",
+      "io.chrisdavenport"                 %% "mapref" % "0.2.1"
     )
   )
   .dependsOn(core)
@@ -100,9 +105,9 @@ lazy val java =
       name := "prometheus4cats-java",
       libraryDependencies ++= Seq(
         "org.typelevel" %% "cats-effect-std" % CatsEffect,
-        "org.typelevel" %% "log4cats-core" % Log4Cats,
-        "io.prometheus" % "simpleclient" % "0.16.0",
-        "org.typelevel" %% "log4cats-noop" % Log4Cats % Test
+        "org.typelevel" %% "log4cats-core"   % Log4Cats,
+        "io.prometheus"  % "simpleclient"    % "0.16.0",
+        "org.typelevel" %% "log4cats-noop"   % Log4Cats % Test
       ),
       libraryDependencies ++= PartialFunction
         .condOpt(CrossVersion.partialVersion(scalaVersion.value)) { case Some((2, 12)) =>
@@ -116,10 +121,7 @@ lazy val docs = project
   .in(file("site"))
   .settings(
     tlSiteHeliumConfig := Helium.defaults.site
-      .metadata(
-        title = Some("Prometheus4Cats"),
-        language = Some("en")
-      )
+      .metadata(title = Some("Prometheus4Cats"), language = Some("en"))
       .site
       .darkMode
       .disabled
@@ -149,16 +151,9 @@ lazy val docs = project
       )
       .site
       .topNavigationBar(
-        homeLink = ImageLink.external(
-          "https://permutive.com",
-          Image.internal(LPath.Root / "img" / "symbol.svg")
-        ),
+        homeLink = ImageLink.external("https://permutive.com", Image.internal(LPath.Root / "img" / "symbol.svg")),
         navLinks = tlSiteApiUrl.value.toList.map { url =>
-          IconLink.external(
-            url.toString,
-            HeliumIcon.api,
-            options = Styles("svg-link")
-          )
+          IconLink.external(url.toString, HeliumIcon.api, options = Styles("svg-link"))
         } ++ List(
           IconLink.external(
             scmInfo.value.fold("https://github.com/permutive-engineering")(_.browseUrl.toString),
@@ -185,7 +180,7 @@ lazy val docs = project
     ),
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % CatsEffect,
-      "org.typelevel" %% "log4cats-noop" % Log4Cats
+      "org.typelevel"                  %% "log4cats-noop" % Log4Cats
     ),
     scalacOptions := Seq()
   )
