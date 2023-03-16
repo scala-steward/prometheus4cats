@@ -77,6 +77,7 @@
     <li class="level2"><a href="../design/design.html">Design</a></li>
     <li class="level1 nav-header">implementations</li>
     <li class="level2"><a href="../implementations/java.html">Java Registry</a></li>
+    <li class="level2"><a href="../implementations/testing.html">Testing Registry</a></li>
     <li class="level1 nav-header">interface</li>
     <li class="level2"><a href="callback-registry.html">Callback Registry</a></li>
     <li class="level2 active"><a href="#">Metrics DSL</a></li>
@@ -139,7 +140,7 @@
 </span><span class="keyword">import</span><span> </span><span class="identifier">prometheus4cats</span><span>.</span><span class="identifier">_</span><span>
 
 </span><span class="keyword">val</span><span> </span><span class="identifier">factory</span><span>: </span><span class="type-name">MetricFactory</span><span>.</span><span class="type-name">WithCallbacks</span><span>[</span><span class="type-name">IO</span><span>] = </span><span class="type-name">MetricFactory</span><span>.</span><span class="identifier">builder</span><span>.</span><span class="identifier">noop</span><span>[</span><span class="type-name">IO</span><span>]
-</span><span class="comment">// factory: MetricFactory.WithCallbacks[IO] = prometheus4cats.MetricFactory$WithCallbacks$$anon$35@1f6f3dfb</span></code></pre>
+</span><span class="comment">// factory: MetricFactory.WithCallbacks[IO] = prometheus4cats.MetricFactory$WithCallbacks$$anon$35@5648d8b0</span></code></pre>
     
     <h3 id="expected-behaviour" class="section">Expected Behaviour<a class="anchor-link right" href="#expected-behaviour"><i class="icofont-laika">&#xef71;</i></a></h3>
     <p>Every metric or callback created/registered using this DSL returns a Cats-Effect <code>Resource</code> which indicates

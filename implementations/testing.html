@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="Laika 0.18.1 + Helium Theme" />
-  <title>Metric Registry</title>
+  <title>Testing Registry</title>
   
   
   <meta name="description" content="docs"/>
@@ -76,13 +76,13 @@
     <li class="level1 nav-header">design</li>
     <li class="level2"><a href="../design/design.html">Design</a></li>
     <li class="level1 nav-header">implementations</li>
-    <li class="level2"><a href="../implementations/java.html">Java Registry</a></li>
-    <li class="level2"><a href="../implementations/testing.html">Testing Registry</a></li>
+    <li class="level2"><a href="java.html">Java Registry</a></li>
+    <li class="level2 active"><a href="#">Testing Registry</a></li>
     <li class="level1 nav-header">interface</li>
-    <li class="level2"><a href="callback-registry.html">Callback Registry</a></li>
-    <li class="level2"><a href="dsl.html">Metrics DSL</a></li>
-    <li class="level2"><a href="metric-factory.html">Metric Factory</a></li>
-    <li class="level2 active"><a href="#">Metric Registry</a></li>
+    <li class="level2"><a href="../interface/callback-registry.html">Callback Registry</a></li>
+    <li class="level2"><a href="../interface/dsl.html">Metrics DSL</a></li>
+    <li class="level2"><a href="../interface/metric-factory.html">Metric Factory</a></li>
+    <li class="level2"><a href="../interface/metric-registry.html">Metric Registry</a></li>
     <li class="level1 nav-header">metrics</li>
     <li class="level2"><a href="../metrics/derived-metric-types.html">Derived Metric Types</a></li>
     <li class="level2"><a href="../metrics/primitive-metric-types.html">Primitive Metric Types</a></li>
@@ -104,10 +104,9 @@
 <div id="container">
 
   <nav id="page-nav">
-    <p class="header"><a href="#">Metric Registry</a></p>
+    <p class="header"><a href="#">Testing Registry</a></p>
 
     <ul class="nav-list">
-      <li class="level1"><a href="#development-notes">Development Notes</a></li>
     </ul>
 
     <p class="footer"></p>
@@ -115,16 +114,34 @@
 
   <main class="content">
 
-    <h1 id="metric-registry" class="title">Metric Registry</h1>
-    <p>The <code>MetricRegistry</code> is an interface that may be implemented by different backends to provide concurrent access to
-    metrics. This is not designed for use by users of the API directly, they should use it with the <a href="metric-factory.html"><code>MetricFactory</code></a> to
-    create metrics using the <a href="dsl.html">DSL</a>.</p>
-    
-    <h3 id="development-notes" class="section">Development Notes<a class="anchor-link right" href="#development-notes"><i class="icofont-laika">&#xef71;</i></a></h3>
-    <p>All methods on <code>MetricRegistry</code> return the desired <a href="../metrics/primitive-metric-types.html">primitive metric</a> contained in a Cats-Effect <code>Resource</code>. This
-    should be used to register and un-register the metric with the underlying concurrent data structure. It should be
-    possible to allow the same metric to be requested multiple times without re-registering or throwing a runtime
-    exception; therefore we recommend implementing some form of reference counting to track claims on each metric.</p>
+    <h1 id="testing-registry" class="title">Testing Registry</h1>
+    <p>There exists a testing <code>MetricRegistry</code> implementation which allows you to check the value
+    history of any created metrics. For <code>Histogram</code> and <code>Summary</code> this is a <code>Chain</code> of all
+    the values that have been <code>observe</code>d for that metric. For <code>Counter</code> and <code>Gauge</code> this is
+    the history of the current value of the metric over time.</p>
+    <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">syntax</span><span>.</span><span class="identifier">all</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">data</span><span>.</span><span class="type-name">Chain</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">effect</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">prometheus4cats</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">prometheus4cats</span><span>.</span><span class="identifier">testing</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="type-name">TestingMetricRegistry</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">flatMap</span><span> { </span><span class="identifier">reg</span><span> =&gt;
+  </span><span class="keyword">val</span><span> </span><span class="identifier">factory</span><span> = </span><span class="type-name">MetricFactory</span><span>.</span><span class="identifier">builder</span><span>.</span><span class="identifier">build</span><span>(</span><span class="identifier">reg</span><span>)
+  </span><span class="identifier">factory</span><span>
+    .</span><span class="identifier">counter</span><span>(</span><span class="string-literal">&quot;counter_total&quot;</span><span>)
+    .</span><span class="identifier">ofDouble</span><span>
+    .</span><span class="identifier">help</span><span>(</span><span class="string-literal">&quot;Describe what this metric does&quot;</span><span>)
+    .</span><span class="identifier">build</span><span>
+    .</span><span class="identifier">use</span><span> { </span><span class="identifier">counter</span><span> =&gt;
+      </span><span class="identifier">counter</span><span>.</span><span class="identifier">inc</span><span> &gt;&gt; </span><span class="identifier">counter</span><span>.</span><span class="identifier">inc</span><span>(</span><span class="number-literal">2.0</span><span>)
+        </span><span class="identifier">reg</span><span>.</span><span class="identifier">counterHistory</span><span>(
+          </span><span class="type-name">Counter</span><span>.</span><span class="type-name">Name</span><span>(</span><span class="string-literal">&quot;counter_total&quot;</span><span>),
+          </span><span class="type-name">Metric</span><span>.</span><span class="type-name">CommonLabels</span><span>.</span><span class="identifier">empty</span><span>
+        ).</span><span class="identifier">flatMap</span><span> { </span><span class="identifier">hist</span><span> =&gt;
+          </span><span class="type-name">IO</span><span>(</span><span class="identifier">hist</span><span> === </span><span class="type-name">Some</span><span>(</span><span class="type-name">Chain</span><span>(</span><span class="number-literal">0.0</span><span>, </span><span class="number-literal">1.0</span><span>, </span><span class="number-literal">3.0</span><span>)))
+        }
+    }
+}</span></code></pre>
 
     <hr style="margin-top: 30px"/>
     <footer style="font-size: 90%; text-align: center">
